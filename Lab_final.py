@@ -159,7 +159,7 @@ avl = AVLTree()  # Nuevo árbol
 
 while True:
     # Menu para prueba y error de las funciones pedidas
-    print("\n1. Insertar\n2. Eliminar\n3. In-order\n4. Árbol\n5. Salir")
+    print("\n1. Insertar valor\n2. Eliminar nodo\n3. Forma In-order del Arbol\n4.Mostrar la estructura del Árbol\n5. Salir")
     ch = input("Opcion: ").strip()
 
     if ch == '1':
