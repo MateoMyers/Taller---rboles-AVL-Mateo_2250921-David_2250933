@@ -1,27 +1,33 @@
 import sys
 
 class Node:
+    # Nodo del arbol con valor, hijos y altura
     def __init__(self, value):
         self.value = value
         self.left = None
         self.right = None
         self.height = 1
 
+# Auxiliares
 def getHeight(node):
+    # Obtiene altura del nodo
     if not node:
         return 0
     return node.height
 
 def getBalance(node):
+    # Calcula factor de balance
     if not node:
         return 0
     return getHeight(node.left) - getHeight(node.right)
 
 def updateHeight(node):
+    # Actualiza altura del nodo
     if node:
         node.height = 1 + max(getHeight(node.left), getHeight(node.right))
 
 def rotate_right(y):
+    # Rotación simple derecha
     x = y.left
     T2 = x.right
     x.right = y
@@ -31,6 +37,7 @@ def rotate_right(y):
     return x
 
 def rotate_left(x):
+    # Rotación simple izquierda
     y = x.right
     T2 = y.left
     y.left = x
@@ -40,68 +47,29 @@ def rotate_left(x):
     return y
 
 class AVLTree:
+    # Árbol AVL principal
     def __init__(self):
         self.root = None
 
     def insert(self, value):
+        # Inserta valor manteniendo balance
         self.root = self._insert_recursive(self.root, value)
 
     def _insert_recursive(self, node, value):
+        # Inserción recursiva con rebalanceo
         if not node:
             return Node(value)
-
         if value < node.value:
             node.left = self._insert_recursive(node.left, value)
         elif value > node.value:
             node.right = self._insert_recursive(node.right, value)
         else:
-            return node
+            return node  # No duplicados
 
         updateHeight(node)
         balance = getBalance(node)
 
-        if balance > 1 and getBalance(node.left) >= 0:
-            return rotate_right(node)
-        elif balance > 1 and getBalance(node.left) < 0:
-            node.left = rotate_left(node.left)
-            return rotate_right(node)
-        elif balance < -1 and getBalance(node.right) <= 0:
-            return rotate_left(node)
-        elif balance < -1 and getBalance(node.right) > 0:
-            node.right = rotate_right(node.right)
-            return rotate_left(node)
-
-        return node
-
-    def _min_value_node(self, node):
-        current = node
-        while current.left is not None:
-            current = current.left
-        return current
-
-    def delete(self, value):
-        self.root = self._delete_recursive(self.root, value)
-
-    def _delete_recursive(self, node, value):
-        if node is None:
-            return node
-
-        if value < node.value:
-            node.left = self._delete_recursive(node.left, value)
-        elif value > node.value:
-            node.right = self._delete_recursive(node.right, value)
-        else:
-            if node.left is None:
-                return node.right
-            elif node.right is None:
-                return node.left
-            temp = self._min_value_node(node.right)
-            node.value = temp.value
-            node.right = self._delete_recursive(node.right, temp.value)
-
-        updateHeight(node)
-        balance = getBalance(node)
-
+        # Rebalanceo (4 casos)
         if balance > 1 and getBalance(node.left) >= 0:
             return rotate_right(node)
         if balance > 1 and getBalance(node.left) < 0:
@@ -115,7 +83,54 @@ class AVLTree:
 
         return node
 
+    def delete(self, value):
+        # Elimina valor manteniendo balance
+        self.root = self._delete_recursive(self.root, value)
+
+    def _delete_recursive(self, node, value):
+        # Eliminación recursiva con rebalanceo
+        if not node:
+            return node
+
+        if value < node.value:
+            node.left = self._delete_recursive(node.left, value)
+        elif value > node.value:
+            node.right = self._delete_recursive(node.right, value)
+        else:
+            if not node.left:
+                return node.right
+            elif not node.right:
+                return node.left
+            temp = self._min_value_node(node.right)
+            node.value = temp.value
+            node.right = self._delete_recursive(node.right, temp.value)
+
+        updateHeight(node)
+        balance = getBalance(node)
+
+        # Rebalanceo (4 casos)
+        if balance > 1 and getBalance(node.left) >= 0:
+            return rotate_right(node)
+        if balance > 1 and getBalance(node.left) < 0:
+            node.left = rotate_left(node.left)
+            return rotate_right(node)
+        if balance < -1 and getBalance(node.right) <= 0:
+            return rotate_left(node)
+        if balance < -1 and getBalance(node.right) > 0:
+            node.right = rotate_right(node.right)
+            return rotate_left(node)
+
+        return node
+
+    def _min_value_node(self, node):
+        # Nodo mínimo en subárbol
+        current = node
+        while current.left:
+            current = current.left
+        return current
+
     def get_inorder(self):
+        # Retorna lista in-order (orden ascendente)
         return self._inorder_helper(self.root, [])
 
     def _inorder_helper(self, node, result):
@@ -126,53 +141,46 @@ class AVLTree:
         return result
 
     def print_tree(self):
-        print("\\nÁrbol AVL:")
+        # Visualiza árbol con valores, alturas y balances
+        print("\nArbol:")
         if self.root:
             self._print_helper(self.root, 0)
         else:
-            print("Árbol vacío")
+            print("Vacío")
 
     def _print_helper(self, node, level):
-        if node is not None:
+        if node:
             self._print_helper(node.right, level + 1)
-            print("   " * level + str(node.value) + "(h:" + str(node.height) + ",b:" + str(getBalance(node)) + ")")
+            print("   " * level + str(node.value) + f"(h:{node.height},b:{getBalance(node)})")
             self._print_helper(node.left, level + 1)
 
 
-
-
-avl = AVLTree()  # New tree for interactive
+avl = AVLTree()  # Nuevo árbol
 
 while True:
-    print("\\nOpciones:")
-    print("1. Insertar valor")
-    print("2. Eliminar valor")
-    print("3. Mostrar recorrido in-order")
-    print("4. Mostrar estructura del árbol (altura, balance)")
-    print("5. Salir")
-    choice = input("Elija opción (1-5): ").strip()
+    # Menu para prueba y error de las funciones pedidas
+    print("\n1. Insertar\n2. Eliminar\n3. In-order\n4. Árbol\n5. Salir")
+    ch = input("Opcion: ").strip()
 
-    if choice == '1':
+    if ch == '1':
+        v = input("Valor: ")
         try:
-            val = int(input("Valor a insertar: "))
-            avl.insert(val)
-            print(f"Valor {val} insertado.")
-        except ValueError:
-            print("Valor inválido. Debe ser número entero.")
-    elif choice == '2':
+            avl.insert(int(v))
+            print("Insertado.")
+        except:
+            print("Error.")
+    elif ch == '2':
+        v = input("Valor: ")
         try:
-            val = int(input("Valor a eliminar: "))
-            avl.delete(val)
-            print(f"Valor {val} eliminado (si existía).")
-        except ValueError:
-            print("Valor inválido.")
-    elif choice == '3':
-        inorder = avl.get_inorder()
-        print("Recorrido in-order:", inorder)
-    elif choice == '4':
+            avl.delete(int(v))
+            print("Eliminado.")
+        except:
+            print("Error.")
+    elif ch == '3':
+        print("In-order:", avl.get_inorder())
+    elif ch == '4':
         avl.print_tree()
-    elif choice == '5':
-        print("¡Gracias!")
+    elif ch == '5':
         break
     else:
-        print("Opción inválida. Intente de nuevo.")
+        print("ILa opcion ingresada no es valida")
